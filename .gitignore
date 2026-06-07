@@ -1,0 +1,33 @@
+# Dependencies
+frontend/node_modules/
+backend/node_modules/
+
+# Environment files
+frontend/.env
+backend/.env
+.env
+
+# Build folders
+frontend/dist/
+backend/dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Database
+backend/*.db
+backend/*.sqlite
+backend/*.sqlite3
+
+# Backups
+backend/backups/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
