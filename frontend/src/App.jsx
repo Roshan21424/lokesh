@@ -1,61 +1,47 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Login from "./pages/Login";
-import Layout from "./components/Layout";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { useAuth } from './context/useAuth';
+import Login    from './pages/Login';
+import Layout   from './components/Layout';
+import POS      from './pages/POS';
+import Menu     from './pages/Menu';
+import History  from './pages/History';
+import Settings from './pages/Settings';
 
-function Placeholder({ title }) {
-  return (
-    <div className="p-6 text-white">
-      <h1 className="text-2xl font-bold">{title}</h1>
-    </div>
-  );
+function PrivateRoute({ children }) {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  return <Layout>{children}</Layout>;
 }
 
-function App() {
+export default function App() {
   return (
     <BrowserRouter>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#1e293b',
+            color: '#f1f5f9',
+            border: '1px solid #334155',
+            fontSize: '13px',
+          },
+          success: { iconTheme: { primary: '#22c55e', secondary: '#f1f5f9' } },
+          error:   { iconTheme: { primary: '#ef4444', secondary: '#f1f5f9' } },
+        }}
+      />
       <Routes>
         <Route path="/login" element={<Login />} />
 
-        <Route
-          path="/pos"
-          element={
-            <Layout>
-              <Placeholder title="POS / Orders" />
-            </Layout>
-          }
-        />
+        <Route path="/pos"      element={<PrivateRoute><POS      /></PrivateRoute>} />
+        <Route path="/menu"     element={<PrivateRoute><Menu     /></PrivateRoute>} />
+        <Route path="/history"  element={<PrivateRoute><History  /></PrivateRoute>} />
+        <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
 
-        <Route
-          path="/menu"
-          element={
-            <Layout>
-              <Placeholder title="Menu Management" />
-            </Layout>
-          }
-        />
-
-        <Route
-          path="/history"
-          element={
-            <Layout>
-              <Placeholder title="History" />
-            </Layout>
-          }
-        />
-
-        <Route
-          path="/settings"
-          element={
-            <Layout>
-              <Placeholder title="Settings" />
-            </Layout>
-          }
-        />
-
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        {/* Default redirect */}
+        <Route path="*" element={<Navigate to="/pos" replace />} />
       </Routes>
     </BrowserRouter>
   );
 }
-
-export default App;
