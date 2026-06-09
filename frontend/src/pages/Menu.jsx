@@ -164,6 +164,13 @@ export default function Menu() {
       ]);
       setCategories(c.data);
       setItems(it.data);
+      setCategories(c.data);
+
+const activeCats = c.data.filter(c => c.is_active);
+
+if (activeCats.length > 0) {
+  setSelCat(activeCats[0].id);
+}
     } catch { toast.error('Failed to load menu'); }
   }, []);
 
@@ -250,123 +257,67 @@ export default function Menu() {
       )}
 
 
-            <div className="w-40 flex-shrink-0 border-l border-surface-3 bg-surface-1 flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between px-3 py-2.5 border-b border-surface-3 flex-shrink-0">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Categories</span>
-          {isAdmin && (
-            <button onClick={() => setCatModal('new')}
-              className="w-5 h-5 rounded bg-brand-500 hover:bg-brand-600 text-white text-sm leading-none flex items-center justify-center transition-colors">
-              +
-            </button>
-          )}
+      <div className="w-36 flex-shrink-0 bg-surface-1 overflow-y-auto p-2 font-semibold text-xs flex flex-col">
+         <div className="px-2 py-2 flex justify-center">
+          <span className="text-brand-400 uppercase">Categories</span>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5">
-          <button onClick={() => setSelCat(null)}
-            className={`w-full text-left px-2 py-2 rounded-lg text-xs font-medium transition-all ${
-              !selCat ? 'bg-brand-500 text-white' : 'text-gray-400 hover:bg-surface-2 hover:text-gray-200'
-            }`}>
-            All <span className="ml-1 text-[10px] opacity-60">({items.filter(i => i.is_active).length})</span>
-          </button>
+        <div className="flex-1 overflow-y-auto space-y-1">
+           {activeCategories.map(cat => (
+            <div key={cat.id} className="group" {...catDrag(cat.id)} style={{ cursor: 'grab' }}>
+              <button onClick={() => setSelCat(cat.id)} className={`w-full text-left px-2 py-2 rounded-sm transition-colors ${ selCat === cat.id ? 'bg-brand-500 text-white' : 'text-gray-400 hover:bg-surface-2 hover:text-gray-200'}`}>
+              {cat.name}
+             </button>
+            </div>
+          ))}
+        </div>
 
-          {activeCategories.map(cat => {
-            const count = items.filter(i => i.category_id === cat.id && i.is_active).length;
-            return (
-              <div key={cat.id} className="group relative"
-                {...(isAdmin ? catDrag(cat.id) : {})}
-                style={isAdmin ? { cursor: 'grab' } : {}}>
-                <button onClick={() => setSelCat(cat.id === selCat ? null : cat.id)}
-                  className={`w-full text-left px-2 py-2 rounded-lg text-xs font-medium transition-all pr-6 ${
-                    selCat === cat.id ? 'bg-brand-500 text-white' : 'text-gray-400 hover:bg-surface-2 hover:text-gray-200'
-                  }`}>
-                  <span className="block truncate">{cat.name}</span>
-                  <span className={`text-[10px] opacity-60`}>{count} items</span>
-                </button>
-                {isAdmin && (
-                  <div className="absolute right-1 top-1 hidden group-hover:flex flex-col gap-0.5 z-10">
-                    <button onClick={() => setCatModal(cat)}
-                      className="w-5 h-5 flex items-center justify-center rounded bg-surface-3 hover:bg-surface-4 text-gray-400 hover:text-blue-400 text-[10px] transition-colors"
-                      title="Rename">✏️</button>
-                    <button onClick={() => removeCategory(cat)}
-                      className="w-5 h-5 flex items-center justify-center rounded bg-surface-3 hover:bg-surface-4 text-gray-400 hover:text-red-400 text-[10px] transition-colors"
-                      title="Remove">✕</button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        <div className="px-2 py-2 flex justify-center">
+          <button onClick={() => setCatModal('new')} className="p-2 rounded bg-brand-500 hover:bg-brand-600 text-white text-xs leading-none flex items-center justify-center">Add Category</button>
         </div>
       </div>
 
-      {/* ── MAIN: Items ──────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* toolbar */}
-        <div className="px-4 py-2.5 border-b border-surface-3 flex items-center gap-3 flex-shrink-0">
-          <input className="input text-sm py-1.5 flex-1" placeholder="🔍  Search items…"
-            value={search} onChange={e => setSearch(e.target.value)} />
-          {isAdmin && (
-            <button onClick={() => setItemModal('new')} className="btn-primary text-sm py-1.5 flex-shrink-0 whitespace-nowrap">
-              + Add Item
-            </button>
-          )}
-        </div>
-
-        {/* items list */}
-        <div className="flex-1 overflow-y-auto">
+        {/* category header */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-surface-3">
+              <h2 className="text-sm ">{activeCategories.find(c => c.id === selCat)?.name}</h2>
+              <div className="text-sm flex items-center gap-2">
+              <button onClick={() => { const cat = activeCategories.find(c => c.id === selCat); if (cat) setCatModal(cat);}} className=" w-24 px-2 py-1 text-blue-500 hover:text-blue-300">Edit</button>
+              <button onClick={() => { const cat = activeCategories.find(c => c.id === selCat); if (cat) removeCategory(cat);}} className="w-24 px-2 py-1 text-red-500 hover:text-red-300">Remove</button>
+              <button onClick={() => setItemModal('new')} className=" w-24 px-2 py-1 text-sm bg-brand-500 text-white hover:bg-brand-600 rounded-sm">Add Item</button>
+            </div>
+          </div>    
+          {/* items table */}
           {visibleItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-600 select-none">
-              <div className="text-4xl mb-3">🍴</div>
               <p className="text-sm">No items found</p>
-              {isAdmin && (
-                <button onClick={() => setItemModal('new')} className="btn-primary text-sm mt-4 px-5">Add First Item</button>
-              )}
             </div>
           ) : (
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-surface-1 z-10">
+            <table className="w-full text-sm border border-surface-3">
+              <thead className="sticky top-0 bg-surface-1 ">
                 <tr className="border-b border-surface-3">
-                  {isAdmin && <th className="w-8 px-2 py-2.5"></th>}
-                  <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                  <th className="text-left px-4 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Category</th>
-                  <th className="text-right px-4 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                  <th className="text-center px-4 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  {isAdmin && <th className="px-4 py-2.5"></th>}
+                  <th className="w-8 p-2"></th>
+                  <th className="text-left px-4 py-2 font-normal">Item</th>
+                  <th className="text-left px-4 py-2 font-normal">Price</th>
+                  <th className="text-left px-4 py-2 font-normal">Status</th>
+                  <th className="px-4 py-2"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-3">
                 {visibleItems.map(item => (
-                  <tr key={item.id}
-                    {...(isAdmin ? itemDrag(item.id) : {})}
-                    className={`group transition-colors hover:bg-surface-2 ${isAdmin ? 'cursor-grab active:cursor-grabbing' : ''}`}>
-                    {isAdmin && (
-                      <td className="px-2 py-3 text-gray-600 text-center select-none">⠿</td>
-                    )}
-                    <td className="px-4 py-3 font-medium text-gray-200">{item.name}</td>
-                    <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">{item.category_name}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-brand-400">₹{Number(item.price).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-center">
-                      {item.is_available
-                        ? <span className="badge bg-green-500/10 text-green-400">Available</span>
-                        : <span className="badge bg-orange-500/10 text-orange-400">Unavailable</span>}
-                    </td>
-                    {isAdmin && (
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => setItemModal(item)}
-                            className="px-2 py-1 text-xs text-gray-400 hover:text-blue-400 hover:bg-surface-3 rounded-lg transition-colors">
-                            Edit
-                          </button>
-                          <button onClick={() => toggleItemAvailable(item)}
-                            className="px-2 py-1 text-xs text-gray-400 hover:text-orange-400 hover:bg-surface-3 rounded-lg transition-colors whitespace-nowrap">
-                            {item.is_available ? "86'd" : 'Restore'}
-                          </button>
-                          <button onClick={() => removeItem(item)}
-                            className="px-2 py-1 text-xs text-gray-400 hover:text-red-400 hover:bg-surface-3 rounded-lg transition-colors">
-                            Remove
-                          </button>
+                  <tr key={item.id} className="group transition-colors hover:bg-surface-2 cursor-grab active:cursor-grabbing" >
+                    <td className="px-2 py-3 text-left text-gray-600 select-none">⠿</td>
+                    <td className="px-4 py-3 text-left text-gray-200">{item.name}</td>
+                    <td className="px-4 py-3 text-left text-brand-400">₹{Number(item.price).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-left"> {item.is_available ? <span className="badge bg-green-500/10 text-green-400">Available</span> : <span className="badge bg-orange-500/10 text-orange-400">Unavailable</span>}</td>
+                    <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1 whitespace-nowrap">
+                          <button onClick={() => setItemModal(item)} className=" w-24 px-2 py-1 text-blue-500 hover:text-blue-300">Edit</button>
+                          <button onClick={() => removeItem(item)} className=" w-24 px-2 py-1 text-red-500 hover:text-red-300">Remove</button>
+                          <button onClick={() => toggleItemAvailable(item)} className=" w-24 px-2 py-1 text-yellow-500 hover:text-yellow-300">{item.is_available ? "Unavailable" : 'Available'}</button>
                         </div>
-                      </td>
-                    )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -375,7 +326,6 @@ export default function Menu() {
         </div>
       </div>
 
-      {/* ── RIGHT: Category sidebar ───────────────────────────────────────── */}
 
     </div>
   );
