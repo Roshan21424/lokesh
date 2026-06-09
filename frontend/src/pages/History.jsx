@@ -95,23 +95,23 @@ return (
         Bill #{bill.bill_number}
       </h3>
 
-      <button
-        onClick={() => printReceipt(bill, settings)}
-        className="btn-ghost text-xs py-1.5 px-3"
-      >
-        Print
-      </button>
+<button
+  onClick={() => printReceipt(bill, settings)}
+  className="px-2 py-1 text-xs font-semibold rounded-sm bg-surface-2 hover:bg-surface-3 text-gray-300 transition-colors"
+>
+  Print
+</button>
     </div>
 
     {/* content */}
     <div className="flex-1 overflow-y-auto p-4 space-y-4">
 
       {/* details */}
-      <div className="grid gap-2 text-xs">
+      <div className="grid gap-2 text-xs font-semibold">
 
         <div className="bg-surface-2 rounded-sm p-3">
           <p className="text-gray-500 mb-1">Date & Time</p>
-          <p className="text-gray-200 font-semibold">
+          <p className="text-gray-200 ">
             {new Date(bill.created_at).toLocaleString()}
           </p>
         </div>
@@ -135,7 +135,7 @@ return (
 
       {/* items */}
       <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+        <p className="text-xs font-semibold text-gray-500 mb-2">
           Items
         </p>
 
@@ -274,94 +274,196 @@ export default function History() {
     other: 'bg-gray-500/10 text-gray-400',
   };
 
-  return (
-    <div className="flex h-full overflow-hidden">
-      {/* left */}
-      <div className={`${selBill ? 'hidden md:flex' : 'flex'} flex-col flex-1 overflow-hidden`}>
-        {/* Summary cards */}
-        {summary && (
-          <div className="grid grid-cols-2 gap-3 p-4 border-b border-surface-3 flex-shrink-0">
-            {[
-              { label: 'Bills',   value: summary.count,       fmt: v => v },
-              { label: 'Revenue', value: summary.total_sales, fmt: v => `₹${v.toFixed(2)}` },
-            ].map(({ label, value, fmt }) => (
-              <div key={label} className="bg-surface-1 border border-surface-3 rounded-sm px-4 py-3">
-                <p className="text-xs font-semibold text-gray-500">{label}</p>
-                <p className="text-xs font-semibold text-gray-100 ">{fmt(value)}</p>
-              </div>
-            ))}
-          </div>
-        )}
+return (
+  <div className="flex h-full overflow-hidden">
 
-        {/* Filters */}
-        <div className="px-4 py-3 border-b border-surface-3 space-y-2 flex-shrink-0">
-          <div className="flex gap-2 flex-wrap">
-            <button onClick={() => setFilter('today', filters.today === 'true' ? '' : 'true')} className={`px-3 py-1.5 rounded-sm text-xs font-semibold transition-all ${ filters.today === 'true' ? 'bg-brand-500 text-white' : 'bg-surface-3 text-gray-400 hover:text-gray-200'}`}>
-              Today
-            </button>
+    {/* LEFT */}
+    <div className={`${selBill ? 'hidden md:flex' : 'flex'} flex-col flex-1 overflow-hidden`}>
 
-            <input type="date" className="input font-semibold text-gray-400 text-xs py-1.5 w-36 rounded-sm" value={filters.from} onChange={e => { setFilter('from', e.target.value); setFilter('today', ''); }} />
-            <input type="date" className="input font-semibold text-gray-400 text-xs py-1.5 w-36 rounded-sm" value={filters.to} onChange={e => { setFilter('to', e.target.value); setFilter('today', ''); }} />
-            <select className="input font-semibold text-gray-400 text-xs py-1.5 w-32 rounded-sm" value={filters.staff} onChange={e => setFilter('staff', e.target.value)}>
-              <option value="">All Staff</option>
-              {staffList.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-        </div>
-
-        {/* List */}
-        <div className="flex-1 overflow-y-auto">
-          {loading ? (
-            <div className="flex items-center justify-center h-32 text-gray-600 text-xs">Loading…</div>
-          ) : bills.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full font-semibold text-xs text-gray-600 select-none">
-              <p className="text-xs">No bills found</p>
+      {/* Summary */}
+      {summary && (
+        <>
+          <div className="px-4 py-3 ">
+            <div className="font-semibold text-brand-400 text-xs uppercase mb-3">
+              Summary
             </div>
-          ) : (
-            <div className="divide-y divide-surface-3">
-              {bills.map(bill => (
-                <button key={bill.id} onClick={() => setSelBill(bill.id)}  className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-surface-2 ${ selBill === bill.id ? 'bg-surface-2 border-l-2 border-brand-500' : ''}`}>
-                  {/* left data */}
-                  <div className="flex-1 min-w-0">
-                    {/* bill id */}
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="font-semibold text-gray-200 text-xs">Bill No: #{bill.bill_number}</span>
-                    </div>
-                    {/* bill data */}
-                    <div className="flex items-center font-semibold gap-2 text-gray-600 text-xs">
-                      <span>{new Date(bill.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      <span>•</span>
-                      <span>{bill.billed_by_name}</span>
-                      <span>•</span>
-                      <span>{bill.item_count} items</span>
-                    </div>
-                  </div>
-                  {/* right data */}
-                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                    <span className="font-semibold text-brand-400 text-xs">₹{Number(bill.grand_total).toFixed(2)}</span>
-                  </div>
-                </button>
+
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                {
+                  label: 'Bills',
+                  value: summary.count,
+                  fmt: v => v,
+                },
+                {
+                  label: 'Revenue',
+                  value: summary.total_sales,
+                  fmt: v => `₹${Number(v).toFixed(2)}`,
+                },
+              ].map(({ label, value, fmt }) => (
+                <div
+                  key={label}
+                  className="bg-surface-1 border border-surface-3 rounded-sm px-4 py-3"
+                >
+                  <p className="text-xs font-semibold text-gray-500">
+                    {label}
+                  </p>
+
+                  <p className="text-xs font-semibold text-gray-100">
+                    {fmt(value)}
+                  </p>
+                </div>
               ))}
             </div>
-          )}
+          </div>
+        </>
+      )}
+
+      {/* Filters */}
+      <div className="px-4 py-3 space-y-2 flex-shrink-0">
+        <div className="font-semibold text-brand-400 text-xs uppercase py-2">
+          Filters
+        </div>
+
+        <div className="flex gap-2 flex-wrap">
+
+          <button
+            onClick={() =>
+              setFilter(
+                'today',
+                filters.today === 'true' ? '' : 'true'
+              )
+            }
+            className={`px-3 py-1.5 rounded-sm text-xs font-semibold transition-all ${
+              filters.today === 'true'
+                ? 'bg-brand-500 text-white'
+                : 'bg-surface-3 text-gray-400 hover:text-gray-200'
+            }`}
+          >
+            Today
+          </button>
+
+          <input
+            type="date"
+            className="input font-semibold text-gray-400 text-xs py-1.5 w-36 rounded-sm"
+            value={filters.from}
+            onChange={e => {
+              setFilter('from', e.target.value);
+              setFilter('today', '');
+            }}
+          />
+
+          <input
+            type="date"
+            className="input font-semibold text-gray-400 text-xs py-1.5 w-36 rounded-sm"
+            value={filters.to}
+            onChange={e => {
+              setFilter('to', e.target.value);
+              setFilter('today', '');
+            }}
+          />
+
+          <select
+            className="input font-semibold text-gray-400 text-xs py-1.5 w-32 rounded-sm"
+            value={filters.staff}
+            onChange={e => setFilter('staff', e.target.value)}
+          >
+            <option value="">All Staff</option>
+
+            {staffList.map(s => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+
         </div>
       </div>
 
-      {/* ── RIGHT: Detail ─────────────────────────────────────────────────────── */}
-      {selBill ? (
-        <div className={`${selBill ? 'flex' : 'hidden md:flex'} flex-col w-full md:w-80 lg:w-96 flex-shrink-0 border-l border-surface-3 bg-surface-1 overflow-hidden`}>
-          <BillDetail
-            billId={selBill}
-            settings={settings}
-            onClose={() => setSelBill(null)}
-          />
-        </div>
-      ) : (
-        <div className="hidden md:flex flex-col w-80 lg:w-96 flex-shrink-0 border-l border-surface-3 bg-surface-1 items-center justify-center text-gray-600 select-none">
-          <div className="text-4xl mb-3">🧾</div>
-          <p className="text-xs">Select a bill to view details</p>
-        </div>
-      )}
+      {/* Bills List */}
+      <div className="flex-1 overflow-y-auto">
+        {loading ? (
+          <div className="flex items-center justify-center h-32 text-gray-600 text-xs">
+            Loading…
+          </div>
+        ) : bills.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full font-semibold text-xs text-gray-600 select-none">
+            <p>No bills found</p>
+          </div>
+        ) : (
+          <div className="border-y border-surface-3 divide-surface-3">
+
+            {bills.map(bill => (
+              <button
+                key={bill.id}
+                onClick={() => setSelBill(bill.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-surface-3 hover:bg-surface-2 ${
+                  selBill === bill.id
+                    ? 'bg-surface-2 border-l-2 border-brand-500'
+                    : ''
+                }`}
+              >
+
+                {/* Left */}
+                <div className="flex-1 min-w-0">
+
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="font-semibold text-gray-200 text-xs">
+                      Bill No: #{bill.bill_number}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 font-semibold text-gray-600 text-xs">
+                    <span>
+                      {new Date(bill.created_at).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+
+                    <span>•</span>
+                    <span>{bill.billed_by_name}</span>
+
+                    <span>•</span>
+                    <span>{bill.item_count} items</span>
+                  </div>
+
+                </div>
+
+                {/* Right */}
+                <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                  <span className="font-semibold text-brand-400 text-xs">
+                    ₹{Number(bill.grand_total).toFixed(2)}
+                  </span>
+                </div>
+
+              </button>
+            ))}
+
+          </div>
+        )}
+      </div>
     </div>
-  );
+
+    {/* RIGHT */}
+    {selBill ? (
+      <div className="flex flex-col w-full md:w-80 lg:w-96 flex-shrink-0 border-l border-surface-3 bg-surface-1 overflow-hidden">
+        <BillDetail
+          billId={selBill}
+          settings={settings}
+          onClose={() => setSelBill(null)}
+        />
+      </div>
+    ) : (
+      <div className="hidden md:flex flex-col w-80 lg:w-96 flex-shrink-0 border-l border-surface-3 bg-surface-1 items-center justify-center text-gray-600 select-none">
+        <div className="text-4xl mb-3">🧾</div>
+        <p className="text-xs">
+          Select a bill to view details
+        </p>
+      </div>
+    )}
+
+  </div>
+);
+
 }

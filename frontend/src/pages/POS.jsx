@@ -297,7 +297,30 @@ export default function POS() {
     }
   };
 
+  // ── decrement / remove item
+  const removeItem = async (item) => {
+    if (!order) return;
 
+    const existing = (order.items || []).find(
+      (i) => i.menu_item_id === item.id
+    );
+
+    if (!existing) return;
+
+    const newQty = existing.qty - 1;
+
+    if (newQty < 1) {
+      await api.delete(`/orders/${order.id}/items/${item.id}`);
+    } else {
+      await api.post(`/orders/${order.id}/items`, {
+        menu_item_id: item.id,
+        qty: newQty,
+      });
+    }
+
+    const full = await api.get(`/orders/${order.id}`);
+    setOrder(full.data);
+  };
   
 
   // ── set qty (0 = remove)
@@ -359,7 +382,7 @@ export default function POS() {
       )}
 
       {/* all categories */}
-      <div className="w-36 flex-shrink-0  bg-surface-1 overflow-y-auto p-2 font-semibold text-xs">
+      <div className="w-48 flex-shrink-0  bg-surface-1 overflow-y-auto p-2 font-semibold text-xs">
         <div className="px-2 py-2 flex justify-center">
           <span className="text-brand-400 uppercase">Categories</span>
         </div>
@@ -370,11 +393,11 @@ export default function POS() {
       </div>
  
       {/* category menu */}
-      <div className="flex-1 flex flex-col overflow-hidden font-semibold text-xs">
+      <div className="flex-1 flex flex-col overflow-hidden font-semibold text-xs p-2">
         {/* search */}
         <div className="p-2 flex-shrink-0">
           <input
-            className="input text-sm py-1.5"
+            className="input text-xs py-1.5 rounded-sm "
             placeholder="search items"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -389,7 +412,7 @@ export default function POS() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3  gap-4">
               {filteredItems.map((item) => {
                 const orderItem = order?.items?.find((i) => i.menu_item_id === item.id);
                 const qty = orderItem?.qty || 0;
@@ -415,7 +438,7 @@ export default function POS() {
       </div>
 
       {/* order */}
-      <div className="w-64 xl:w-72 flex flex-col flex-shrink-0 overflow-hidden bg-surface-1 font-semibold text-xs">
+      <div className="w-64 xl:w-80 flex flex-col flex-shrink-0 overflow-hidden bg-surface-1 font-semibold text-xs p-2">
 
         {/* heading */}
         <div className="px-2 py-2 flex justify-center">

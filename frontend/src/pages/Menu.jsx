@@ -71,11 +71,11 @@ function CategoryModal({ cat, onSave, onClose }) {
 }
 
 // ─── Item Modal ───────────────────────────────────────────────────────────────
-function ItemModal({ item, categories, onSave, onClose }) {
+function ItemModal({ item, currentCategoryId, onSave, onClose }) {
   const [form, setForm] = useState({
     name: item?.name || '',
     price: item?.price ?? '',
-    category_id: item?.category_id || categories[0]?.id || '',
+    category_id: item?.category_id || currentCategoryId,
     is_available: item?.is_available ?? 1,
   });
   const [saving, setSaving] = useState(false);
@@ -83,7 +83,6 @@ function ItemModal({ item, categories, onSave, onClose }) {
   const submit = async () => {
     if (!form.name.trim()) return toast.error('Name is required');
     if (form.price === '' || Number(form.price) < 0) return toast.error('Valid price required');
-    if (!form.category_id) return toast.error('Category required');
     setSaving(true);
     try {
       const payload = { ...form, price: Number(form.price), tax_rate: 0 };
@@ -99,48 +98,28 @@ function ItemModal({ item, categories, onSave, onClose }) {
     finally { setSaving(false); }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-      <div className="bg-surface-1 border border-surface-3 rounded-2xl shadow-2xl w-full max-w-xs p-5 space-y-4">
-        <h2 className="text-base font-semibold text-gray-100">{item ? 'Edit Item' : 'New Item'}</h2>
+return (
+  <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+    <div className="bg-surface-1 border border-surface-3 rounded-sm shadow-2xl w-full max-w-xs p-5 space-y-4">
+      <h2 className="text-xs font-semibold text-white">{item ? 'Edit Item' : 'Add New Item'}</h2>
 
-        <div>
-          <label className="block text-xs text-gray-400 uppercase tracking-wider mb-1">Category</label>
-          <select className="input" value={form.category_id}
-            onChange={e => setForm(f => ({ ...f, category_id: Number(e.target.value) }))}>
-            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </div>
+      <div>
+        <label className=" text-xs font-semibold text-gray-400  mb-1">Item Name</label>
+        <input className="input text-xs font-semibold rounded-sm" autoFocus placeholder="e.g. Paneer Butter Masala" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+      </div>
 
-        <div>
-          <label className="block text-xs text-gray-400 uppercase tracking-wider mb-1">Item Name</label>
-          <input className="input" autoFocus placeholder="e.g. Paneer Butter Masala"
-            value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
-        </div>
+      <div>
+        <label className=" text-xs font-semibold text-gray-400 mb-1">Price (₹)</label>
+        <input type="number" min="0" step="0.01" className="input text-xs font-semibold rounded-sm" placeholder="0.00" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} />
+      </div>
 
-        <div>
-          <label className="block text-xs text-gray-400 uppercase tracking-wider mb-1">Price (₹)</label>
-          <input type="number" min="0" step="0.01" className="input" placeholder="0.00"
-            value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} />
-        </div>
-
-        <label className="flex items-center gap-3 cursor-pointer select-none">
-          <div className={`w-10 h-5 rounded-full transition-colors relative cursor-pointer ${form.is_available ? 'bg-brand-500' : 'bg-surface-4'}`}
-            onClick={() => setForm(f => ({ ...f, is_available: f.is_available ? 0 : 1 }))}>
-            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.is_available ? 'translate-x-5' : 'translate-x-0.5'}`} />
-          </div>
-          <span className="text-sm text-gray-300">Available for ordering</span>
-        </label>
-
-        <div className="flex gap-2">
-          <button onClick={onClose} className="btn-ghost flex-1 text-sm">Cancel</button>
-          <button onClick={submit} disabled={saving} className="btn-primary flex-1 text-sm">
-            {saving ? 'Saving…' : 'Save'}
-          </button>
-        </div>
+      <div className="flex gap-2">
+        <button onClick={onClose} className="btn-ghost flex-1 text-xs font-semibold rounded-sm">Cancel</button>
+        <button onClick={submit} disabled={saving} className="btn-primary flex-1 text-xs font-semibold rounded-sm">{saving ? 'Saving…' : 'Save'}</button>
       </div>
     </div>
-  );
+  </div>
+);
 }
 
 // ─── Menu Page ────────────────────────────────────────────────────────────────
@@ -156,23 +135,32 @@ export default function Menu() {
   const [catModal,    setCatModal]    = useState(null);
   const [itemModal,   setItemModal]   = useState(null);
 
-  const loadData = useCallback(async () => {
-    try {
-      const [c, it] = await Promise.all([
-        api.get('/categories?all=true'),
-        api.get('/items?all=true'),
-      ]);
-      setCategories(c.data);
-      setItems(it.data);
-      setCategories(c.data);
+const loadData = useCallback(async () => {
+  try {
+    const [c, it] = await Promise.all([
+      api.get('/categories?all=true'),
+      api.get('/items?all=true'),
+    ]);
 
-const activeCats = c.data.filter(c => c.is_active);
+    setCategories(c.data);
+    setItems(it.data);
+  } catch {
+    toast.error('Failed to load menu');
+  }
+}, []);
 
-if (activeCats.length > 0) {
-  setSelCat(activeCats[0].id);
-}
-    } catch { toast.error('Failed to load menu'); }
-  }, []);
+
+useEffect(() => {
+  const activeCats = categories.filter(c => c.is_active);
+
+  if (!selCat && activeCats.length > 0) {
+    setSelCat(activeCats[0].id);
+  }
+
+  if (selCat && !activeCats.some(c => c.id === selCat)) {
+    setSelCat(activeCats[0]?.id ?? null);
+  }
+}, [categories, selCat]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -252,12 +240,14 @@ if (activeCats.length > 0) {
       )}
       {itemModal && (
         <ItemModal item={itemModal === 'new' ? null : itemModal}
-          categories={activeCategories}
-          onSave={() => { setItemModal(null); loadData(); }} onClose={() => setItemModal(null)} />
+  currentCategoryId={selCat}
+  onSave={() => { setItemModal(null); loadData(); }}
+  onClose={() => setItemModal(null)}
+/>
       )}
 
 
-      <div className="w-36 flex-shrink-0 bg-surface-1 overflow-y-auto p-2 font-semibold text-xs flex flex-col">
+      <div className="w-48 flex-shrink-0 bg-surface-1 overflow-y-auto p-2 font-semibold text-xs flex flex-col">
          <div className="px-2 py-2 flex justify-center">
           <span className="text-brand-400 uppercase">Categories</span>
         </div>
@@ -277,52 +267,61 @@ if (activeCats.length > 0) {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden p-4">
         {/* category header */}
           <div className="flex-1 overflow-y-auto">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-surface-3">
-              <h2 className="text-sm ">{activeCategories.find(c => c.id === selCat)?.name}</h2>
-              <div className="text-sm flex items-center gap-2">
-              <button onClick={() => { const cat = activeCategories.find(c => c.id === selCat); if (cat) setCatModal(cat);}} className=" w-24 px-2 py-1 text-blue-500 hover:text-blue-300">Edit</button>
-              <button onClick={() => { const cat = activeCategories.find(c => c.id === selCat); if (cat) removeCategory(cat);}} className="w-24 px-2 py-1 text-red-500 hover:text-red-300">Remove</button>
-              <button onClick={() => setItemModal('new')} className=" w-24 px-2 py-1 text-sm bg-brand-500 text-white hover:bg-brand-600 rounded-sm">Add Item</button>
+            <div className="flex items-center justify-between border-b border-surface-3">
+              <h2 className="text-xs font-semibold uppercase"> {activeCategories.find(c => c.id === selCat)?.name}</h2>
+              <div className="text-xs font-semibold flex items-center gap-1 whitespace-nowrap p-4">
+              <button onClick={() => { const cat = activeCategories.find(c => c.id === selCat); if (cat) setCatModal(cat);}} className="w-24 px-2 py-1 text-xs bg-blue-500 text-white hover:bg-blue-600 rounded-sm">Edit</button>
+              <button onClick={() => { const cat = activeCategories.find(c => c.id === selCat); if (cat) removeCategory(cat);}} className="w-24 px-2 py-1 text-xs bg-red-500 text-white hover:bg-red-600 rounded-sm">Remove</button>
+              <button onClick={() => setItemModal('new')} className="w-24 px-2 py-1 text-xs bg-brand-500 text-white hover:bg-brand-600 rounded-sm">Add Item</button>
             </div>
           </div>    
           {/* items table */}
-          {visibleItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-600 select-none">
-              <p className="text-sm">No items found</p>
+     <table className="w-full text-xs font-semibold border border-surface-3">
+  <thead className="sticky top-0 bg-surface-1">
+    <tr className="border-b border-surface-3">
+      <th className="w-8 p-2"></th>
+      <th className="text-left px-4 py-2 font-normal">Item</th>
+      <th className="text-left px-4 py-2 font-normal">Price</th>
+      <th className="text-left px-4 py-2 font-normal">Status</th>
+      <th className="px-4 py-2"></th>
+    </tr>
+  </thead>
+
+  <tbody className="divide-y divide-surface-3">
+    {visibleItems.length === 0 ? (
+      <tr>
+        <td colSpan={5} className=" py-3 text-center text-gray-500">
+          No items found
+        </td>
+      </tr>
+    ) : (
+      visibleItems.map(item => (
+        <tr key={item.id}  className="group transition-colors hover:bg-surface-2 cursor-grab active:cursor-grabbing">
+          <td  className="px-2 py-3 text-left text-gray-600  select-none">⠿</td>
+          <td className="px-4 py-3 text-left text-gray-200">{item.name}</td>
+          <td className="px-4 py-3 text-left text-brand-400">₹{Number(item.price).toFixed(2)}</td>
+          <td className="px-4 py-3 text-left">
+            {item.is_available
+              ? <span className="badge bg-green-500/10 text-green-400">Available</span>
+              : <span className="badge bg-orange-500/10 text-orange-400">Unavailable</span>}
+          </td>
+          <td className="px-4 py-3">
+            <div className="flex items-center justify-end gap-1 whitespace-nowrap">
+              <button onClick={() => setItemModal(item)} className="w-24 px-2 py-1 text-blue-500 hover:text-blue-300">Edit</button>
+              <button onClick={() => removeItem(item)} className="w-24 px-2 py-1 text-red-500 hover:text-red-300">Remove</button>
+              <button onClick={() => toggleItemAvailable(item)} className="w-24 px-2 py-1 text-yellow-500 hover:text-yellow-300">
+                {item.is_available ? 'Unavailable' : 'Available'}
+              </button>
             </div>
-          ) : (
-            <table className="w-full text-sm border border-surface-3">
-              <thead className="sticky top-0 bg-surface-1 ">
-                <tr className="border-b border-surface-3">
-                  <th className="w-8 p-2"></th>
-                  <th className="text-left px-4 py-2 font-normal">Item</th>
-                  <th className="text-left px-4 py-2 font-normal">Price</th>
-                  <th className="text-left px-4 py-2 font-normal">Status</th>
-                  <th className="px-4 py-2"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-surface-3">
-                {visibleItems.map(item => (
-                  <tr key={item.id} className="group transition-colors hover:bg-surface-2 cursor-grab active:cursor-grabbing" >
-                    <td className="px-2 py-3 text-left text-gray-600 select-none">⠿</td>
-                    <td className="px-4 py-3 text-left text-gray-200">{item.name}</td>
-                    <td className="px-4 py-3 text-left text-brand-400">₹{Number(item.price).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-left"> {item.is_available ? <span className="badge bg-green-500/10 text-green-400">Available</span> : <span className="badge bg-orange-500/10 text-orange-400">Unavailable</span>}</td>
-                    <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1 whitespace-nowrap">
-                          <button onClick={() => setItemModal(item)} className=" w-24 px-2 py-1 text-blue-500 hover:text-blue-300">Edit</button>
-                          <button onClick={() => removeItem(item)} className=" w-24 px-2 py-1 text-red-500 hover:text-red-300">Remove</button>
-                          <button onClick={() => toggleItemAvailable(item)} className=" w-24 px-2 py-1 text-yellow-500 hover:text-yellow-300">{item.is_available ? "Unavailable" : 'Available'}</button>
-                        </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+          </td>
+        </tr>
+      ))
+    )}
+  </tbody>
+</table>
         </div>
       </div>
 
