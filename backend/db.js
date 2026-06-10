@@ -2,13 +2,21 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
-const DB_DIR = path.join(__dirname, 'data');
+const isPkg = typeof process.pkg !== 'undefined';
+
+const DB_DIR = isPkg
+  ? path.join(path.dirname(process.execPath), 'data')
+  : path.join(__dirname, 'data');
+
 const DB_PATH = path.join(DB_DIR, 'restaurant.db');
 
-if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
+if (!fs.existsSync(DB_DIR)) {
+  fs.mkdirSync(DB_DIR, { recursive: true });
+}
 
 const db = new Database(DB_PATH);
 
+console.log('Database:', DB_PATH);
 // Safety pragmas
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');

@@ -8,7 +8,8 @@ export default defineConfig({
     allowedHosts: true,
     port: 5173,
     proxy: {
-      '/api': 'https://7351-202-153-41-98.ngrok-free.app'
+      
+      '/api': 'http://localhost:3001',
     }
   }
 })
