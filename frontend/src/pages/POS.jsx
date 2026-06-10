@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import api from "./api";
+import api from "../services/api";
 import toast from "react-hot-toast";
 
-// ─── Receipt print ────────────────────────────────────────────────────────────
 function printReceipt(bill, settings) {
   const calcs = Array.isArray(bill.calculations)
     ? bill.calculations
@@ -76,7 +75,6 @@ function printReceipt(bill, settings) {
   }, 400);
 }
 
-// ─── Bill Modal (no payment method) ──────────────────────────────────────────
 function BillModal({ order, billCalcs, onConfirm, onCancel }) {
   const [selected, setSelected] = useState(() => billCalcs.map((c) => c.id));
   const [loading, setLoading] = useState(false);
@@ -217,11 +215,10 @@ function BillModal({ order, billCalcs, onConfirm, onCancel }) {
   );
 }
 
-// ─── POS Page ─────────────────────────────────────────────────────────────────
 export default function POS() {
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
-  const [order, setOrder] = useState(null); // single active order
+  const [order, setOrder] = useState(null);
   const [billCalcs, setBillCalcs] = useState([]);
   const [settings, setSettings] = useState({});
   const [selCat, setSelCat] = useState(null);
@@ -229,7 +226,6 @@ export default function POS() {
   const [showBill, setShowBill] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  // ── load everything
   const loadAll = useCallback(async () => {
     try {
       const [c, it, bc, s] = await Promise.all([
@@ -247,7 +243,6 @@ export default function POS() {
     }
   }, []);
 
-  // ── load / refresh open order (only one)
   const loadOrder = useCallback(async () => {
     try {
       const res = await api.get("/orders");
@@ -268,7 +263,6 @@ export default function POS() {
     loadOrder();
   }, [loadAll, loadOrder]);
 
-  // ── ensure an order exists, create if not
   const ensureOrder = async () => {
     if (order) return order;
     const res = await api.post("/orders", { order_type: "dine-in" });
@@ -277,7 +271,6 @@ export default function POS() {
     return full.data;
   };
 
-  // ── add / increment item
   const addItem = async (item) => {
     setBusy(true);
     try {
@@ -297,48 +290,39 @@ export default function POS() {
     }
   };
 
-  // ── decrement / remove item
-  const removeItem = async (item) => {
-    if (!order) return;
-
-    const existing = (order.items || []).find(
-      (i) => i.menu_item_id === item.id
-    );
-
-    if (!existing) return;
-
-    const newQty = existing.qty - 1;
-
+ const removeItem = async (item) => {
+  if (!order) return;
+  const existing = (order.items || []).find((i) => i.menu_item_id === item.id);
+  if (!existing) return;
+  const newQty = existing.qty - 1;
+  try {
     if (newQty < 1) {
       await api.delete(`/orders/${order.id}/items/${item.id}`);
     } else {
-      await api.post(`/orders/${order.id}/items`, {
-        menu_item_id: item.id,
-        qty: newQty,
-      });
+      await api.post(`/orders/${order.id}/items`, { menu_item_id: item.id, qty: newQty });
     }
-
     const full = await api.get(`/orders/${order.id}`);
     setOrder(full.data);
-  };
+  } catch (err) {
+    toast.error(err.response?.data?.error || "Failed to update item");
+  }
+};
   
-
-  // ── set qty (0 = remove)
-  const setQty = async (menuItemId, qty) => {
-    if (!order) return;
+ const setQty = async (menuItemId, qty) => {
+  if (!order) return;
+  try {
     if (qty < 1) {
       await api.delete(`/orders/${order.id}/items/${menuItemId}`);
     } else {
-      await api.post(`/orders/${order.id}/items`, {
-        menu_item_id: menuItemId,
-        qty,
-      });
+      await api.post(`/orders/${order.id}/items`, { menu_item_id: menuItemId, qty });
     }
     const full = await api.get(`/orders/${order.id}`);
     setOrder(full.data);
-  };
+  } catch (err) {
+    toast.error(err.response?.data?.error || "Failed to update quantity");
+  }
+};
 
-  // ── generate bill + print
   const generateBill = async (calculations) => {
     const res = await api.post(`/orders/${order.id}/bill`, {
       payment_mode: "cash", // backend requires it; defaulting silently
@@ -351,7 +335,6 @@ export default function POS() {
     toast.success(`Bill #${res.data.bill_number} printed!`);
   };
 
-  // ── clear order
   const clearOrder = async () => {
     if (!order) return;
     if (!window.confirm("Clear the current order?")) return;
@@ -475,10 +458,12 @@ export default function POS() {
             <span className="text-gray-400">Subtotal</span>
             <span className="text-gray-200">₹ {subtotal.toFixed(2)}</span>
           </div>
-          <button onClick={() => setShowBill(true)} disabled={!(order?.items || []).length} className="btn-primary w-full py-2"> Print Bill</button>
+          <button onClick={() => setShowBill(true)} disabled={!(order?.items || []).length} className="btn-primary w-full py-2 text-xs font-semibold rounded-sm"> Print Bill</button>
           <button onClick={clearOrder} disabled={!order} className="w-full text-red-400 hover:text-red-500 py-2 disabled:opacity-30">Clear Order</button>
         </div>
       </div>
     </div>
   );
 }
+
+

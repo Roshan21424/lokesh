@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import api from './api';
+import api from '../services/api';
 import toast from 'react-hot-toast';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../hooks/useAuth';
 
-// ─── tiny drag-sort hook ──────────────────────────────────────────────────────
-// returns { dragHandlers, draggingId } — attach dragHandlers(item) to each row
+
 function useDragSort(items, onReorder) {
   const dragId = useRef(null);
   const overId = useRef(null);
@@ -31,7 +30,6 @@ function useDragSort(items, onReorder) {
   return handlers;
 }
 
-// ─── Category Modal ───────────────────────────────────────────────────────────
 function CategoryModal({ cat, onSave, onClose }) {
   const [name, setName] = useState(cat?.name || '');
   const [saving, setSaving] = useState(false);
@@ -55,13 +53,13 @@ function CategoryModal({ cat, onSave, onClose }) {
   return (
     <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
       <div className="bg-surface-1 border border-surface-3 rounded-2xl shadow-2xl w-full max-w-xs p-5 space-y-4">
-        <h2 className="text-base font-semibold text-gray-100">{cat ? 'Rename Category' : 'New Category'}</h2>
-        <input className="input" autoFocus placeholder="Category name"
+        <h2 className="text-xs font-semibold text-gray-100">{cat ? 'Rename Category' : 'New Category'}</h2>
+        <input className="input text-xs font-semibold rounded-sm" autoFocus placeholder="Category name"
           value={name} onChange={e => setName(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && submit()} />
         <div className="flex gap-2">
-          <button onClick={onClose} className="btn-ghost flex-1 text-sm">Cancel</button>
-          <button onClick={submit} disabled={saving} className="btn-primary flex-1 text-sm">
+          <button onClick={onClose} className="btn-ghost flex-1 text-xs font-semibold rounded-sm">Cancel</button>
+          <button onClick={submit} disabled={saving} className="btn-primary flex-1 text-xs font-semibold rounded-sm">
             {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
@@ -70,7 +68,6 @@ function CategoryModal({ cat, onSave, onClose }) {
   );
 }
 
-// ─── Item Modal ───────────────────────────────────────────────────────────────
 function ItemModal({ item, currentCategoryId, onSave, onClose }) {
   const [form, setForm] = useState({
     name: item?.name || '',
@@ -122,7 +119,6 @@ return (
 );
 }
 
-// ─── Menu Page ────────────────────────────────────────────────────────────────
 export default function Menu() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
@@ -329,3 +325,4 @@ useEffect(() => {
     </div>
   );
 }
+

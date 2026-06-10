@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { useAuth } from './context/useAuth';
+import { useAuth } from './hooks/useAuth';
 import Login   from './pages/Login';
-import Layout  from './components/Layout';
+import Layout  from './pages/Layout';
 import POS     from './pages/POS';
 import Menu    from './pages/Menu';
 import History from './pages/History';

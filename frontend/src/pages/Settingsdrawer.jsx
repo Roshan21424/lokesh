@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import api from '../pages/api';
+import api from '../services/api';
 import toast from 'react-hot-toast';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../hooks/useAuth';
 
-// ─── Section wrapper ──────────────────────────────────────────────────────────
 function Section({ title, children }) {
   return (
     <div className="space-y-3">
@@ -13,7 +12,6 @@ function Section({ title, children }) {
   );
 }
 
-// ─── Staff Modal ──────────────────────────────────────────────────────────────
 function StaffModal({ onSave, onClose }) {
   const [form, setForm] = useState({ username: '', password: '', role: 'staff' });
   const [saving, setSaving] = useState(false);
@@ -59,7 +57,6 @@ function StaffModal({ onSave, onClose }) {
   );
 }
 
-// ─── Change Password Modal ────────────────────────────────────────────────────
 function ChangePasswordModal({ staffId, staffName, onClose }) {
   const [password, setPassword] = useState('');
   const [saving, setSaving] = useState(false);
@@ -90,7 +87,6 @@ function ChangePasswordModal({ staffId, staffName, onClose }) {
   );
 }
 
-// ─── Bill Calc Modal ──────────────────────────────────────────────────────────
 function BillCalcModal({ calc, onSave, onClose }) {
   const [form, setForm] = useState({ name: calc?.name || '', type: calc?.type || 'percentage', value: calc?.value ?? '', is_deduction: calc?.is_deduction ?? 0 });
   const [saving, setSaving] = useState(false);
@@ -114,20 +110,20 @@ function BillCalcModal({ calc, onSave, onClose }) {
         <h2 className="text-sm font-semibold text-gray-100">{calc ? 'Edit' : 'New'} Charge / Discount</h2>
         <div>
           <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Name</label>
-          <input className="input text-sm" autoFocus placeholder="e.g. GST, Service Charge, Discount" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+          <input className="input text-xs font-semibold rounded-sm" autoFocus placeholder="e.g. GST, Service Charge, Discount" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Type</label>
-            <div className="flex gap-1">
+            <div className="flex gap-1 ">
               {['percentage', 'flat'].map(t => (
-                <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))} className={`flex-1 py-1.5 rounded-sm text-xs font-semibold capitalize ${form.type === t ? 'bg-brand-500 text-white' : 'bg-surface-3 text-gray-400 hover:bg-surface-4'}`}>{t}</button>
+                <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))} className={`flex-1 p-2 rounded-sm text-xs font-semibold capitalize ${form.type === t ? 'bg-brand-500 text-white' : 'bg-surface-3 text-gray-400 hover:bg-surface-4'}`}>{t}</button>
               ))}
             </div>
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Value {form.type === 'percentage' ? '(%)' : '(₹)'}</label>
-            <input type="number" min="0" step="0.01" className="input text-sm" placeholder="0" value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} />
+            <input type="number" min="0" step="0.01" className="input text-xs font-semibold rounded-sm" placeholder="0" value={form.value} onChange={e => setForm(f => ({ ...f, value: e.target.value }))} />
           </div>
         </div>
         <div>
@@ -139,24 +135,21 @@ function BillCalcModal({ calc, onSave, onClose }) {
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={onClose} className="btn-ghost flex-1 text-sm rounded-sm">Cancel</button>
-          <button onClick={submit} disabled={saving} className="btn-primary flex-1 text-sm rounded-sm">{saving ? 'Saving…' : 'Save'}</button>
+          <button onClick={onClose} className="btn-ghost flex-1 text-xs font-semibold rounded-sm">Cancel</button>
+          <button onClick={submit} disabled={saving} className="btn-primary flex-1 text-xs font-semibold rounded-sm">{saving ? 'Saving…' : 'Save'}</button>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Settings Drawer ──────────────────────────────────────────────────────────
 export default function SettingsDrawer({ open, onClose }) {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
-
   const [settings,  setSettings]  = useState({});
   const [staff,     setStaff]     = useState([]);
   const [calcs,     setCalcs]     = useState([]);
   const [saving,    setSaving]    = useState(false);
-
   const [showStaffModal, setShowStaffModal] = useState(false);
   const [changePwdFor,   setChangePwdFor]   = useState(null);
   const [calcModal,      setCalcModal]      = useState(null);

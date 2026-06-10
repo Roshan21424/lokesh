@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import api from './api';
+import api from '../services/api';
 import toast from 'react-hot-toast';
 
 function printReceipt(bill, settings = {}) {
@@ -64,7 +64,6 @@ function printReceipt(bill, settings = {}) {
   setTimeout(() => { w.print(); }, 400);
 }
 
-// ─── Bill Detail Panel ────────────────────────────────────────────────────────
 function BillDetail({ billId, settings, onClose }) {
   const [bill, setBill] = useState(null);
 
@@ -220,7 +219,6 @@ return (
 
 }
 
-// ─── History Page ─────────────────────────────────────────────────────────────
 export default function History() {
   const [bills,      setBills]      = useState([]);
   const [summary,    setSummary]    = useState(null);
@@ -263,17 +261,6 @@ export default function History() {
   useEffect(() => { loadBills(); }, [loadBills]);
 
   const setFilter = (key, val) => setFilters(f => ({ ...f, [key]: val }));
-
-  const typeIcon = { 'dine-in': '🍽️', takeaway: '🥡', delivery: '🛵' };
-  const pmIcon   = { cash: '💵', upi: '📱', card: '💳', other: '🔄' };
-
-  const pmColors = {
-    cash:  'bg-green-500/10 text-green-400',
-    upi:   'bg-blue-500/10 text-blue-400',
-    card:  'bg-purple-500/10 text-purple-400',
-    other: 'bg-gray-500/10 text-gray-400',
-  };
-
 return (
   <div className="flex h-full overflow-hidden">
 
